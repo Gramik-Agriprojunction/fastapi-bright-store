@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     debug: bool = False
     api_prefix: str = "/api/v1"
     database_url: str = "postgresql+asyncpg://user:password@localhost:5432/bright_store"
+    ai_provider: str = "none"
+    ai_api_key: str | None = None
+    ai_model: str | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
