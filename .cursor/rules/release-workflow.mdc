@@ -1,0 +1,30 @@
+---
+description: Enforce UAT-first Git workflow and explicit live deployment
+alwaysApply: true
+---
+
+# Release Workflow
+
+- This repository is `/Users/sourabhyadav/Documents/Project/fastapi-bright-store`.
+- Never use `Cursor`, `AI`, `GPT`, or an agent identity as the Git author,
+  committer, commit message author, branch owner, or release label. Preserve
+  the configured human Git identity. If it is not a human identity, stop and
+  ask for correction before committing.
+- All changes must be committed on `uat` first and pushed to the remote `uat`
+  branch first.
+- Never push directly to `live`/`main` and never merge UAT into live without
+  explicit user approval in the current request.
+- Before UAT push, run relevant tests, lint, and build checks. Report failures
+  instead of claiming deployment success.
+- A request such as “live kar do” explicitly authorizes the live workflow:
+  verify the current commit is already on remote `uat`, merge/promote it to
+  the configured live branch, then deploy that exact commit to the server.
+- Live deployment target is `/var/www/html/`. Use the repository's configured
+  deployment method and preserve secrets outside the repository.
+- Do not run destructive commands on the live server. Do not use
+  `rm -rf`, `git reset --hard`, or `rsync --delete` against
+  `/var/www/html/` unless the user names the exact action and approves it.
+- After a live deployment, run a health check and report the deployed commit,
+  target path, result, and any remaining issue.
+- If GitHub, SSH, server access, or branch permissions are unavailable, stop
+  at that boundary and report the exact blocker; do not bypass it.
