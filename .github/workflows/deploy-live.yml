@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout pushed commit
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Bundle this commit
         run: git bundle create fastapi-bright-store.bundle refs/heads/live
