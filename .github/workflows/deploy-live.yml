@@ -1,0 +1,60 @@
+name: Deploy live API
+
+# Push and pull-request merge both create a push on live.
+on:
+  push:
+    branches:
+      - live
+  workflow_dispatch:
+
+concurrency:
+  group: fastapi-live-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pushed commit
+        uses: actions/checkout@v4
+
+      - name: Bundle this commit
+        run: git bundle create fastapi-bright-store.bundle refs/heads/live
+
+      - name: Copy bundle to the live server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.LIVE_SSH_HOST }}
+          username: ${{ secrets.LIVE_SSH_USER }}
+          key: ${{ secrets.LIVE_SSH_KEY }}
+          source: fastapi-bright-store.bundle
+          target: /tmp
+          overwrite: true
+
+      - name: Update /var/www/html/python-api and restart
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.LIVE_SSH_HOST }}
+          username: ${{ secrets.LIVE_SSH_USER }}
+          key: ${{ secrets.LIVE_SSH_KEY }}
+          command_timeout: 10m
+          script_stop: true
+          script: |
+            set -euo pipefail
+            APP=/var/www/html/python-api
+            BUNDLE=/tmp/fastapi-bright-store.bundle
+            SRC=$(mktemp -d)
+            git clone --branch live "$BUNDLE" "$SRC"
+            rsync -a --exclude '.venv/' --exclude '.env' --exclude '.git/' "$SRC"/ "$APP"/
+            rm -rf "$SRC" "$BUNDLE"
+            "$APP/.venv/bin/pip" install -e "$APP"
+            sudo -n systemctl restart python-api.service
+            for _ in 1 2 3 4 5 6 7 8 9 10; do
+              if curl -fsS http://127.0.0.1:8010/api/v1/health; then
+                echo
+                exit 0
+              fi
+              sleep 1
+            done
+            echo "Health check failed" >&2
+            exit 1
