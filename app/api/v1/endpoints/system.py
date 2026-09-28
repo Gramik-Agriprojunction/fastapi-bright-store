@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import get_settings
+from app.core.key_vault import KeyVaultError, load_webtech_keys
 from app.db.session import check_database_connection
 
 router = APIRouter()
@@ -10,8 +11,16 @@ settings = get_settings()
 
 
 @router.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "environment": settings.app_env}
+async def health() -> dict[str, str | bool]:
+    try:
+        keys_ready = bool(load_webtech_keys())
+    except KeyVaultError:
+        keys_ready = False
+    return {
+        "status": "ok",
+        "environment": settings.app_env,
+        "webtech_keys_configured": keys_ready,
+    }
 
 
 @router.get("/ready")

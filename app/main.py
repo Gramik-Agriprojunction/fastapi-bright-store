@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.v1.router import api_router
 from app.core.config import get_settings
+from app.core.key_vault import KeyVaultError, load_webtech_keys
 from app.modules.buyer.persistence import init_buyer_tables
 from app.modules.collection_centre.errors import CollectionError
 from app.modules.collection_centre.persistence import init_collection_tables
@@ -16,6 +17,10 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    try:
+        _app.state.webtech_keys = load_webtech_keys()
+    except KeyVaultError:
+        _app.state.webtech_keys = {}
     await init_collection_tables()
     await init_buyer_tables()
     yield
