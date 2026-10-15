@@ -11,6 +11,8 @@ from app.core.key_vault import KeyVaultError, load_webtech_keys
 from app.modules.buyer.persistence import init_buyer_tables
 from app.modules.collection_centre.errors import CollectionError
 from app.modules.collection_centre.persistence import init_collection_tables
+from app.modules.webtech.cloud import close_cursor_client
+from app.modules.webtech.errors import WebtechError
 
 settings = get_settings()
 
@@ -24,6 +26,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     await init_collection_tables()
     await init_buyer_tables()
     yield
+    await close_cursor_client()
 
 
 app = FastAPI(title=settings.app_name, version="0.1.0", debug=settings.debug, lifespan=lifespan)
@@ -34,6 +37,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(api_router, prefix=settings.api_prefix)
+
+
+@app.exception_handler(WebtechError)
+async def webtech_error_handler(_request: Request, exc: WebtechError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 @app.exception_handler(CollectionError)

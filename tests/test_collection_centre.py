@@ -281,3 +281,37 @@ def test_crm_trace_row_opens_farmer_details() -> None:
     assert detail["mobile"] == "9936528145"
     assert detail["village"] == "Bilgram SO"
     assert detail["plot"] == "P-1945397"
+
+
+def test_farm_trace_has_the_same_sections_as_crm() -> None:
+    response = client.get("/api/v1/collection-centre/lots/LOT-260927-000101/farm-trace")
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert [step["label"] for step in data["journey"]] == [
+        "Land & Plot",
+        "Crop Cycle",
+        "POP & Inputs",
+        "Field Activities",
+        "Harvest",
+        "Collection Center",
+        "Quality Check",
+        "Packhouse",
+        "Shipment",
+        "Buyer",
+    ]
+    assert data["plots"]
+    assert data["crop_cycles"]
+    assert data["lots"]
+    assert "stages" in data["focus"]
+    assert [step["label"] for step in data["focus"]["stages"]] == [
+        "Harvested",
+        "At Collection",
+        "QC Passed",
+        "Packed",
+        "Dispatched",
+        "Delivered",
+    ]
+    assert data["summary"]["coverage"] is not None
+    assert "inward_kg" in data["focus"]["packhouse"]
+

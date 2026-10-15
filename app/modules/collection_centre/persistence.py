@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.base import Base
 from app.db.session import engine, session_factory
 from app.modules.collection_centre.crm_trace import merge_crm_trace
+from app.modules.collection_centre.farm_trace import enrich_farm_traces
 from app.modules.collection_centre.models import CcRecord
 from app.modules.collection_centre.repository import (
     CollectionStore,
@@ -54,6 +55,7 @@ async def load_store(session: AsyncSession, store: CollectionStore) -> None:
                 store.shipments[row.record_id] = Shipment(**row.payload)
         store.sync_sequences()
     await merge_crm_trace(session, store)
+    await enrich_farm_traces(session, store)
 
 
 async def save_store(session: AsyncSession, store: CollectionStore) -> None:

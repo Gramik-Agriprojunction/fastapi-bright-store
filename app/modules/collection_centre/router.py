@@ -186,6 +186,11 @@ async def confirm_grn(shipment_id: str, payload: GrnIn, service: ServiceDep) -> 
     return ok(service.confirm_grn(shipment_id, payload), "GRN confirmed")
 
 
+@router.get("/lots/{lot_id}/farm-trace")
+async def farm_trace(lot_id: str, service: ServiceDep) -> dict[str, object]:
+    return ok(service.farm_trace(lot_id), "Farmer traceability loaded")
+
+
 @router.get("/lots/{lot_id}/traceability")
 async def lot_360(lot_id: str, service: ServiceDep) -> dict[str, object]:
     return ok(service.lot_360(lot_id), "Lot traceability loaded")

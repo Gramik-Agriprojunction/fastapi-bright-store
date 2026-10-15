@@ -102,6 +102,7 @@ class Lot:
     packed_qty_kg: float | None = None
     pack_count: int | None = None
     shipment_id: str = ""
+    crm_farmer_id: int = 0
     journey: list[JourneyEvent] = field(default_factory=list)
 
 
@@ -419,6 +420,7 @@ class CollectionStore:
             self.deliveries = {}
             self.lots = {}
             self.shipments = {}
+            self.farm_traces = {}
             self._lot_seq = 200
             self._pack_seq = 200
             self._ship_seq = 90
@@ -429,6 +431,7 @@ class CollectionStore:
         self.deliveries = deliveries
         self.lots = lots
         self.shipments = shipments
+        self.farm_traces = {}
         self._lot_seq = 200
         self._pack_seq = 200
         self._ship_seq = 90

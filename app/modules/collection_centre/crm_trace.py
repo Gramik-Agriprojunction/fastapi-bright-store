@@ -42,6 +42,7 @@ SELECT
   h.vehicle_number,
   h.driver_name,
   u.name AS farmer_name,
+  u.id AS farmer_user_id,
   u.mobile,
   u.unique_code,
   c.name AS crop_name,
@@ -161,6 +162,7 @@ def apply_trace_row(store: CollectionStore, row: dict) -> None:
         driver_name=_text(row.get("driver_name")),
         created_at=harvest_on,
         delivery_id=delivery_id,
+        crm_farmer_id=int(row.get("farmer_user_id") or 0),
         qc_status="Accepted" if grade else "",
         qc_remarks=_text(row.get("qc_remarks")),
         qc_parameters={

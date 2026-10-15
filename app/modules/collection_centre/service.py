@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from app.modules.collection_centre.errors import CollectionError
+from app.modules.collection_centre.farm_trace import build_farm_trace
 from app.modules.collection_centre.repository import (
     CollectionStore,
     Delivery,
@@ -621,6 +622,21 @@ class CollectionService:
         lot.status = "received"
         self._push_journey(lot, "Buyer receipt", shipment.buyer_name, "done")
         return self.buyer_receipt(shipment.id)
+
+    def farm_trace(self, lot_id: str) -> dict[str, object]:
+        token = lot_id.strip()
+        lot = self.store.lots.get(token)
+        if lot is None:
+            for item in self.store.lots.values():
+                if item.harvest_lot == token or item.pack_lot_id == token:
+                    lot = item
+                    break
+        if lot is None:
+            raise CollectionError("Lot not found", 404)
+        cached = getattr(self.store, "farm_traces", {}).get(lot.id)
+        if isinstance(cached, dict):
+            return cached
+        return build_farm_trace(self.store, lot)
 
     def lot_360(self, lot_id: str) -> dict[str, object]:
         lot = self._require_lot(lot_id)
